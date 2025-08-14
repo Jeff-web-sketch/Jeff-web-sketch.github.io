@@ -1,16 +1,27 @@
+name: Update Users
+
+# Trigger manually via Actions → Run workflow
+on:
+  workflow_dispatch:
+    inputs:
+      username:
+        description: 'Username to add'
+        required: true
+
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Add username to users.json
+      - name: Add username
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}   # <-- Put it here
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           USERNAME="${{ github.event.inputs.username }}"
           echo "Adding user: $USERNAME"
+          # Make sure users.json exists in repo root
           jq ". + [\"$USERNAME\"]" users.json > tmp.json
           mv tmp.json users.json
           git config user.name "github-actions[bot]"
