@@ -91,6 +91,7 @@ const prompts = [
 
 let currentPrompt = "";
 let startTime = null;
+let correctIndex = 0; // index of the next correct character
 let totalTyped = 0;
 let correctTyped = 0;
 
@@ -105,25 +106,26 @@ const resetBtn = document.getElementById('resetBtn');
 function newPrompt() {
     const randomIndex = Math.floor(Math.random() * prompts.length);
     currentPrompt = prompts[randomIndex];
-    renderPrompt("");
-    inputBox.value = "";
-    inputBox.disabled = true;
-    countdownDiv.textContent = "";
-    startTime = null;
+    correctIndex = 0;
     totalTyped = 0;
     correctTyped = 0;
+    renderPrompt();
+    inputBox.value = "";
+    inputBox.disabled = true;
+    inputBox.placeholder = "Wait for countdown...";
+    countdownDiv.textContent = "";
+    startTime = null;
     wpmSpan.textContent = 0;
     accuracySpan.textContent = 100;
     progressBar.style.width = "0%";
     startCountdown();
 }
 
-function renderPrompt(typed) {
+function renderPrompt() {
     let html = "";
     for (let i = 0; i < currentPrompt.length; i++) {
-        if (i < typed.length) {
-            if (typed[i] === currentPrompt[i]) html += `<span class="correct">${currentPrompt[i]}</span>`;
-            else html += `<span class="wrong">${currentPrompt[i]}</span>`;
+        if (i < correctIndex) {
+            html += `<span class="correct">${currentPrompt[i]}</span>`;
         } else {
             html += `<span>${currentPrompt[i]}</span>`;
         }
@@ -149,17 +151,19 @@ function startCountdown() {
     }, 1000);
 }
 
-inputBox.addEventListener('input', () => {
+inputBox.addEventListener('input', (e) => {
     if (!startTime) startTime = new Date();
 
-    const typed = inputBox.value;
-    totalTyped = typed.length;
+    const lastChar = e.data; // the last character typed
+    if (!lastChar) return; // handle backspace or delete (ignore)
 
-    let correctCount = 0;
-    for (let i = 0; i < typed.length; i++) {
-        if (typed[i] === currentPrompt[i]) correctCount++;
+    totalTyped++;
+
+    if (lastChar === currentPrompt[correctIndex]) {
+        correctTyped++;
+        correctIndex++;
+        renderPrompt();
     }
-    correctTyped = correctCount;
 
     const accuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
     accuracySpan.textContent = accuracy;
@@ -168,14 +172,15 @@ inputBox.addEventListener('input', () => {
     const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
     wpmSpan.textContent = wpm;
 
-    renderPrompt(typed);
-
-    const progressPercent = Math.min((typed.length / currentPrompt.length) * 100, 100);
+    const progressPercent = Math.min((correctIndex / currentPrompt.length) * 100, 100);
     progressBar.style.width = progressPercent + "%";
 
-    if (typed === currentPrompt) {
+    if (correctIndex >= currentPrompt.length) {
         inputBox.disabled = true;
     }
+
+    // clear the input box so user can keep typing next char
+    inputBox.value = "";
 });
 
 resetBtn.addEventListener('click', newPrompt);
