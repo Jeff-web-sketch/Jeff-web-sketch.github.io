@@ -1,16 +1,6 @@
-//
-//  script.js
-//  
-//
-//  Created by Bob Robertson on 8/14/25.
-//
-
-// Check login state
 document.addEventListener("DOMContentLoaded", () => {
   const storedUser = localStorage.getItem("username");
-  if (storedUser) {
-    showApp(storedUser);
-  }
+  if (storedUser) showApp(storedUser);
 });
 
 document.getElementById("login-btn").addEventListener("click", () => {
@@ -18,6 +8,7 @@ document.getElementById("login-btn").addEventListener("click", () => {
   if (username) {
     localStorage.setItem("username", username);
     showApp(username);
+    alert("Username stored locally. To save to repo, trigger workflow manually.");
   }
 });
 
@@ -36,7 +27,6 @@ function showApp(username) {
 document.getElementById("add-snippet").addEventListener("click", () => {
   const container = document.getElementById("snippet-container");
   const text = document.getElementById("new-snippet").value.trim();
-
   if (text) {
     const pre = document.createElement("pre");
     pre.textContent = text;
