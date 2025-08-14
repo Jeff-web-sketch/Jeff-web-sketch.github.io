@@ -15,6 +15,10 @@
         justify-content: flex-start;
         padding-top: 50px;
     }
+    #countdown {
+        font-size: 3rem;
+        margin-bottom: 20px;
+    }
     #prompt {
         font-size: 2rem;
         max-width: 800px;
@@ -33,26 +37,9 @@
         color: #fff;
         border-radius: 5px;
     }
-    .correct {
-        color: #00ff00;
-    }
-    .wrong {
-        color: #ff5555;
-    }
-    #stats {
-        margin-top: 20px;
-        font-size: 1.2rem;
-    }
-    #resetBtn {
-        margin-top: 20px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        background-color: #ff6600;
-        color: white;
-    }
+    .correct { color: #00ff00; }
+    .wrong { color: #ff5555; }
+    #stats { margin-top: 20px; font-size: 1.2rem; }
     #progressBarContainer {
         width: 800px;
         height: 20px;
@@ -67,13 +54,24 @@
         background: #00ff00;
         transition: width 0.1s;
     }
+    #resetBtn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: #ff6600;
+        color: white;
+    }
 </style>
 </head>
 <body>
 
 <h1>Nitro Type Style Typing</h1>
+<div id="countdown"></div>
 <div id="prompt"></div>
-<input type="text" id="inputBox" placeholder="Start typing here..." autofocus>
+<input type="text" id="inputBox" placeholder="Wait for countdown..." disabled>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
@@ -96,24 +94,28 @@ let startTime = null;
 let totalTyped = 0;
 let correctTyped = 0;
 
+const countdownDiv = document.getElementById('countdown');
 const promptDiv = document.getElementById('prompt');
 const inputBox = document.getElementById('inputBox');
 const wpmSpan = document.getElementById('wpm');
 const accuracySpan = document.getElementById('accuracy');
-const resetBtn = document.getElementById('resetBtn');
 const progressBar = document.getElementById('progressBar');
+const resetBtn = document.getElementById('resetBtn');
 
 function newPrompt() {
     const randomIndex = Math.floor(Math.random() * prompts.length);
     currentPrompt = prompts[randomIndex];
     renderPrompt("");
     inputBox.value = "";
+    inputBox.disabled = true;
+    countdownDiv.textContent = "";
     startTime = null;
     totalTyped = 0;
     correctTyped = 0;
     wpmSpan.textContent = 0;
     accuracySpan.textContent = 100;
     progressBar.style.width = "0%";
+    startCountdown();
 }
 
 function renderPrompt(typed) {
@@ -127,6 +129,24 @@ function renderPrompt(typed) {
         }
     }
     promptDiv.innerHTML = html;
+}
+
+function startCountdown() {
+    let count = 3;
+    countdownDiv.textContent = count;
+    const interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            countdownDiv.textContent = count;
+        } else {
+            countdownDiv.textContent = "Go!";
+            inputBox.disabled = false;
+            inputBox.placeholder = "Start typing...";
+            inputBox.focus();
+            clearInterval(interval);
+            setTimeout(() => countdownDiv.textContent = "", 1000);
+        }
+    }, 1000);
 }
 
 inputBox.addEventListener('input', () => {
