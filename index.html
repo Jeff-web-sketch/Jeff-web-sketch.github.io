@@ -21,8 +21,8 @@
         margin-bottom: 20px;
     }
     #prompt {
-        font-size: 2rem;
-        max-width: 800px;
+        font-size: 1.8rem;
+        max-width: 900px;
         margin-bottom: 30px;
         line-height: 2.5rem;
         white-space: pre-wrap;
@@ -30,7 +30,7 @@
     .correct { color: #00ff00; }
     #stats { margin-top: 20px; font-size: 1.2rem; }
     #track {
-        width: 800px;
+        width: 900px;
         height: 50px;
         background: #334433;
         border-radius: 25px;
@@ -64,6 +64,21 @@
         background-color: #55aa55;
         color: white;
     }
+    #endScreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #d9ffd9;
+        font-size: 2rem;
+        display: none;
+    }
 </style>
 </head>
 <body>
@@ -79,13 +94,19 @@
 </div>
 <button id="resetBtn">Reset</button>
 
+<div id="endScreen">
+    <div id="endMessage"></div>
+    <div id="endStats"></div>
+    <button id="endResetBtn">Play Again</button>
+</div>
+
 <script>
 const prompts = [
-    "Pickles are crunchy and delicious.",
-    "I love adding pickles to my sandwich.",
-    "A dill pickle is my favorite snack.",
-    "Sometimes sweet pickles are surprisingly tasty.",
-    "Pickle Type is the best typing game ever!"
+    "Pickles are crunchy, green, and delicious, and they make sandwiches much more exciting to eat than plain bread.",
+    "A dill pickle can be sweet, sour, or spicy, but they all bring a burst of flavor to burgers and snacks.",
+    "Sometimes people forget that pickles are actually cucumbers that have been soaked in brine or vinegar for a long period.",
+    "Adding pickles to your salad or burger gives a satisfying crunch that enhances every bite and makes meals more fun.",
+    "Pickle Type is a fun typing game where you race your pickle across the track while practicing typing skills with long sentences."
 ];
 
 let currentPrompt = "";
@@ -93,6 +114,7 @@ let correctIndex = 0;
 let totalTyped = 0;
 let correctTyped = 0;
 let startTime = null;
+let wpmInterval = null;
 
 const countdownDiv = document.getElementById('countdown');
 const promptDiv = document.getElementById('prompt');
@@ -101,6 +123,11 @@ const accuracySpan = document.getElementById('accuracy');
 const car = document.getElementById('car');
 const track = document.getElementById('track');
 const resetBtn = document.getElementById('resetBtn');
+
+const endScreen = document.getElementById('endScreen');
+const endMessage = document.getElementById('endMessage');
+const endStats = document.getElementById('endStats');
+const endResetBtn = document.getElementById('endResetBtn');
 
 function newPrompt() {
     const randomIndex = Math.floor(Math.random() * prompts.length);
@@ -114,6 +141,10 @@ function newPrompt() {
     accuracySpan.textContent = 100;
     car.style.left = "0px";
     countdownDiv.textContent = "";
+    endScreen.style.display = "none";
+
+    if (wpmInterval) clearInterval(wpmInterval);
+
     startCountdown();
 }
 
@@ -137,8 +168,19 @@ function startCountdown() {
             clearInterval(interval);
             setTimeout(() => countdownDiv.textContent = "", 1000);
             document.addEventListener('keydown', handleTyping);
+            startWPMTimer();
         }
     }, 1000);
+}
+
+// continuously update WPM
+function startWPMTimer() {
+    wpmInterval = setInterval(() => {
+        if (!startTime) return;
+        const elapsedMinutes = (new Date() - startTime) / 60000;
+        const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
+        wpmSpan.textContent = wpm;
+    }, 100);
 }
 
 function handleTyping(e) {
@@ -156,15 +198,14 @@ function handleTyping(e) {
         updateCar();
     }
 
+    // accuracy = correct keystrokes / total keystrokes
     const accuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
     accuracySpan.textContent = accuracy;
 
-    const elapsedMinutes = (new Date() - startTime) / 60000;
-    const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
-    wpmSpan.textContent = wpm;
-
     if (correctIndex >= currentPrompt.length) {
         document.removeEventListener('keydown', handleTyping);
+        clearInterval(wpmInterval);
+        showEndScreen();
     }
 }
 
@@ -174,9 +215,20 @@ function updateCar() {
     car.style.left = (percent * trackWidth) + "px";
 }
 
-resetBtn.addEventListener('click', newPrompt);
+function showEndScreen() {
+    const elapsedMinutes = (new Date() - startTime) / 60000;
+    const finalWPM = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
+    const finalAccuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
 
-// Start
+    endMessage.textContent = "🏁 You Finished the Race! 🏁";
+    endStats.textContent = `WPM: ${finalWPM} | Accuracy: ${finalAccuracy}%`;
+    endScreen.style.display = "flex";
+}
+
+resetBtn.addEventListener('click', newPrompt);
+endResetBtn.addEventListener('click', newPrompt);
+
+// Start first race
 newPrompt();
 </script>
 
