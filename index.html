@@ -1,54 +1,125 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <meta name="description" content="Coder's Hub - Share and explore code snippets">
-  <title>Coder's Hub</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Typing Practice</title>
+<style>
+    body {
+        background-color: #121212;
+        color: #ffffff;
+        font-family: monospace;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        margin: 0;
+    }
+    #prompt {
+        font-size: 1.5rem;
+        margin-bottom: 20px;
+        max-width: 600px;
+        text-align: center;
+    }
+    #inputBox {
+        width: 600px;
+        padding: 10px;
+        font-size: 1.2rem;
+        border: none;
+        outline: none;
+        border-radius: 5px;
+    }
+    #stats {
+        margin-top: 20px;
+        font-size: 1.2rem;
+    }
+    #resetBtn {
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background-color: #ff6600;
+        color: white;
+    }
+</style>
 </head>
 <body>
-  <div id="login-screen">
-    <h1>🔑 Sign In</h1>
-    <input type="text" id="username" placeholder="Enter username" />
-    <button id="login-btn">Sign In</button>
-  </div>
 
-  <div id="app" style="display: none;">
-    <header>
-      <h1>💻 Coder's Hub</h1>
-      <nav>
-        <a href="#home">Home</a>
-        <a href="#snippets">Snippets</a>
-        <a href="#about">About</a>
-        <button id="logout-btn" class="logout">Log Out</button>
-      </nav>
-    </header>
+<h1>Typing Practice</h1>
+<div id="prompt"></div>
+<input type="text" id="inputBox" placeholder="Start typing here..." autofocus>
+<div id="stats">
+    WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
+</div>
+<button id="resetBtn">Reset</button>
 
-    <main id="home">
-      <section>
-        <h2>Welcome, <span id="user-display"></span>!</h2>
-        <p>A simple place to share and explore code snippets.</p>
-      </section>
+<script>
+const prompts = [
+    "The quick brown fox jumps over the lazy dog.",
+    "Typing practice improves speed and accuracy.",
+    "JavaScript is fun to learn and use in websites.",
+    "Practice makes perfect in all skills.",
+    "Keep calm and type on!"
+];
 
-      <section id="snippets">
-        <h2>Code Snippets</h2>
-        <div id="snippet-container"></div>
-        <textarea id="new-snippet" placeholder="Write your snippet here..."></textarea>
-        <button id="add-snippet">Add Snippet</button>
-      </section>
+let currentPrompt = "";
+let startTime = null;
+let totalTyped = 0;
+let correctTyped = 0;
 
-      <section id="about">
-        <h2>About</h2>
-        <p>This is a lightweight static site for sharing code snippets. Built with HTML, CSS, and JavaScript.</p>
-      </section>
-    </main>
+const promptDiv = document.getElementById('prompt');
+const inputBox = document.getElementById('inputBox');
+const wpmSpan = document.getElementById('wpm');
+const accuracySpan = document.getElementById('accuracy');
+const resetBtn = document.getElementById('resetBtn');
 
-    <footer>
-      <p>Made with ❤️ for coders. Hosted on GitHub Pages.</p>
-    </footer>
-  </div>
+function newPrompt() {
+    const randomIndex = Math.floor(Math.random() * prompts.length);
+    currentPrompt = prompts[randomIndex];
+    promptDiv.textContent = currentPrompt;
+    inputBox.value = "";
+    startTime = null;
+    totalTyped = 0;
+    correctTyped = 0;
+    wpmSpan.textContent = 0;
+    accuracySpan.textContent = 100;
+}
 
-  <script src="script.js"></script>
+inputBox.addEventListener('input', () => {
+    if (!startTime) startTime = new Date();
+
+    const typed = inputBox.value;
+    totalTyped = typed.length;
+
+    let correctCount = 0;
+    for (let i = 0; i < typed.length; i++) {
+        if (typed[i] === currentPrompt[i]) correctCount++;
+    }
+    correctTyped = correctCount;
+
+    const accuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
+    accuracySpan.textContent = accuracy;
+
+    const elapsedMinutes = (new Date() - startTime) / 60000;
+    const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
+    wpmSpan.textContent = wpm;
+
+    if (typed === currentPrompt) {
+        inputBox.style.border = "2px solid #00ff00";
+    } else {
+        inputBox.style.border = "2px solid #ffffff";
+    }
+});
+
+resetBtn.addEventListener('click', newPrompt);
+
+// Initialize
+newPrompt();
+</script>
+
 </body>
 </html>
