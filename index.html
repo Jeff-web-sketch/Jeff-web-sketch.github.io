@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nitro Type Style Typing Race</title>
+<title>Pickle Type</title>
 <style>
     body {
-        background-color: #0f0f0f;
-        color: #fff;
+        background-color: #0f1f0f;
+        color: #d9ffd9;
         font-family: monospace;
         display: flex;
         flex-direction: column;
@@ -32,21 +32,27 @@
     #track {
         width: 800px;
         height: 50px;
-        background: #333;
+        background: #334433;
         border-radius: 25px;
         margin-top: 30px;
         position: relative;
         overflow: hidden;
+        border: 2px solid #55aa55;
     }
     #car {
         width: 50px;
         height: 50px;
-        background-color: #ff6600;
-        border-radius: 50%;
+        background-color: #55aa55;
+        border-radius: 25px;
         position: absolute;
         left: 0;
         top: 0;
         transition: left 0.05s linear;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #fff;
     }
     #resetBtn {
         margin-top: 30px;
@@ -55,31 +61,31 @@
         border: none;
         border-radius: 5px;
         cursor: pointer;
-        background-color: #ff6600;
+        background-color: #55aa55;
         color: white;
     }
 </style>
 </head>
 <body>
 
-<h1>Nitro Type Style Typing Race</h1>
+<h1>Pickle Type</h1>
 <div id="countdown"></div>
 <div id="prompt"></div>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
 <div id="track">
-    <div id="car"></div>
+    <div id="car">🥒</div>
 </div>
 <button id="resetBtn">Reset</button>
 
 <script>
 const prompts = [
-    "The quick brown fox jumps over the lazy dog.",
-    "Typing fast improves your speed and accuracy.",
-    "JavaScript makes websites interactive and fun.",
-    "Practice makes perfect for typing skills.",
-    "Keep calm and type on like a pro."
+    "Pickles are crunchy and delicious.",
+    "I love adding pickles to my sandwich.",
+    "A dill pickle is my favorite snack.",
+    "Sometimes sweet pickles are surprisingly tasty.",
+    "Pickle Type is the best typing game ever!"
 ];
 
 let currentPrompt = "";
@@ -139,7 +145,7 @@ function handleTyping(e) {
     if (!startTime) startTime = new Date();
 
     const char = e.key;
-    if (char.length > 1) return; // ignore keys like Shift, Arrow, etc.
+    if (char.length > 1) return; // ignore Shift, etc.
 
     totalTyped++;
 
