@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nitro Type Style Typing</title>
+<title>Nitro Type Style Typing Race</title>
 <style>
     body {
         background-color: #0f0f0f;
@@ -14,6 +14,7 @@
         align-items: center;
         justify-content: flex-start;
         padding-top: 50px;
+        user-select: none;
     }
     #countdown {
         font-size: 3rem;
@@ -22,40 +23,33 @@
     #prompt {
         font-size: 2rem;
         max-width: 800px;
-        margin-bottom: 20px;
+        margin-bottom: 30px;
         line-height: 2.5rem;
-        user-select: none;
         white-space: pre-wrap;
     }
-    #inputBox {
-        width: 800px;
-        padding: 10px;
-        font-size: 1.5rem;
-        border: none;
-        outline: none;
-        background: #1a1a1a;
-        color: #fff;
-        border-radius: 5px;
-    }
     .correct { color: #00ff00; }
-    .wrong { color: #ff5555; }
     #stats { margin-top: 20px; font-size: 1.2rem; }
-    #progressBarContainer {
+    #track {
         width: 800px;
-        height: 20px;
+        height: 50px;
         background: #333;
-        margin-top: 20px;
-        border-radius: 10px;
+        border-radius: 25px;
+        margin-top: 30px;
+        position: relative;
         overflow: hidden;
     }
-    #progressBar {
-        height: 100%;
-        width: 0%;
-        background: #00ff00;
-        transition: width 0.1s;
+    #car {
+        width: 50px;
+        height: 50px;
+        background-color: #ff6600;
+        border-radius: 50%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        transition: left 0.05s linear;
     }
     #resetBtn {
-        margin-top: 20px;
+        margin-top: 30px;
         padding: 10px 20px;
         font-size: 1rem;
         border: none;
@@ -68,15 +62,14 @@
 </head>
 <body>
 
-<h1>Nitro Type Style Typing</h1>
+<h1>Nitro Type Style Typing Race</h1>
 <div id="countdown"></div>
 <div id="prompt"></div>
-<input type="text" id="inputBox" placeholder="Wait for countdown..." disabled>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
-<div id="progressBarContainer">
-    <div id="progressBar"></div>
+<div id="track">
+    <div id="car"></div>
 </div>
 <button id="resetBtn">Reset</button>
 
@@ -90,17 +83,17 @@ const prompts = [
 ];
 
 let currentPrompt = "";
-let startTime = null;
-let correctIndex = 0; // index of the next correct character
+let correctIndex = 0;
 let totalTyped = 0;
 let correctTyped = 0;
+let startTime = null;
 
 const countdownDiv = document.getElementById('countdown');
 const promptDiv = document.getElementById('prompt');
-const inputBox = document.getElementById('inputBox');
 const wpmSpan = document.getElementById('wpm');
 const accuracySpan = document.getElementById('accuracy');
-const progressBar = document.getElementById('progressBar');
+const car = document.getElementById('car');
+const track = document.getElementById('track');
 const resetBtn = document.getElementById('resetBtn');
 
 function newPrompt() {
@@ -109,26 +102,20 @@ function newPrompt() {
     correctIndex = 0;
     totalTyped = 0;
     correctTyped = 0;
-    renderPrompt();
-    inputBox.value = "";
-    inputBox.disabled = true;
-    inputBox.placeholder = "Wait for countdown...";
-    countdownDiv.textContent = "";
     startTime = null;
+    renderPrompt();
     wpmSpan.textContent = 0;
     accuracySpan.textContent = 100;
-    progressBar.style.width = "0%";
+    car.style.left = "0px";
+    countdownDiv.textContent = "";
     startCountdown();
 }
 
 function renderPrompt() {
     let html = "";
     for (let i = 0; i < currentPrompt.length; i++) {
-        if (i < correctIndex) {
-            html += `<span class="correct">${currentPrompt[i]}</span>`;
-        } else {
-            html += `<span>${currentPrompt[i]}</span>`;
-        }
+        if (i < correctIndex) html += `<span class="correct">${currentPrompt[i]}</span>`;
+        else html += `<span>${currentPrompt[i]}</span>`;
     }
     promptDiv.innerHTML = html;
 }
@@ -138,31 +125,29 @@ function startCountdown() {
     countdownDiv.textContent = count;
     const interval = setInterval(() => {
         count--;
-        if (count > 0) {
-            countdownDiv.textContent = count;
-        } else {
+        if (count > 0) countdownDiv.textContent = count;
+        else {
             countdownDiv.textContent = "Go!";
-            inputBox.disabled = false;
-            inputBox.placeholder = "Start typing...";
-            inputBox.focus();
             clearInterval(interval);
             setTimeout(() => countdownDiv.textContent = "", 1000);
+            document.addEventListener('keydown', handleTyping);
         }
     }, 1000);
 }
 
-inputBox.addEventListener('input', (e) => {
+function handleTyping(e) {
     if (!startTime) startTime = new Date();
 
-    const lastChar = e.data; // the last character typed
-    if (!lastChar) return; // handle backspace or delete (ignore)
+    const char = e.key;
+    if (char.length > 1) return; // ignore keys like Shift, Arrow, etc.
 
     totalTyped++;
 
-    if (lastChar === currentPrompt[correctIndex]) {
+    if (char === currentPrompt[correctIndex]) {
         correctTyped++;
         correctIndex++;
         renderPrompt();
+        updateCar();
     }
 
     const accuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
@@ -172,20 +157,20 @@ inputBox.addEventListener('input', (e) => {
     const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
     wpmSpan.textContent = wpm;
 
-    const progressPercent = Math.min((correctIndex / currentPrompt.length) * 100, 100);
-    progressBar.style.width = progressPercent + "%";
-
     if (correctIndex >= currentPrompt.length) {
-        inputBox.disabled = true;
+        document.removeEventListener('keydown', handleTyping);
     }
+}
 
-    // clear the input box so user can keep typing next char
-    inputBox.value = "";
-});
+function updateCar() {
+    const percent = correctIndex / currentPrompt.length;
+    const trackWidth = track.offsetWidth - car.offsetWidth;
+    car.style.left = (percent * trackWidth) + "px";
+}
 
 resetBtn.addEventListener('click', newPrompt);
 
-// Initialize
+// Start
 newPrompt();
 </script>
 
