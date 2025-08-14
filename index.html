@@ -1,35 +1,43 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Typing Practice</title>
+<title>Nitro Type Style Typing</title>
 <style>
     body {
-        background-color: #121212;
-        color: #ffffff;
+        background-color: #0f0f0f;
+        color: #fff;
         font-family: monospace;
         display: flex;
         flex-direction: column;
         align-items: center;
-        justify-content: center;
-        min-height: 100vh;
-        margin: 0;
+        justify-content: flex-start;
+        padding-top: 50px;
     }
     #prompt {
-        font-size: 1.5rem;
+        font-size: 2rem;
+        max-width: 800px;
         margin-bottom: 20px;
-        max-width: 600px;
-        text-align: center;
+        line-height: 2.5rem;
+        user-select: none;
+        white-space: pre-wrap;
     }
     #inputBox {
-        width: 600px;
+        width: 800px;
         padding: 10px;
-        font-size: 1.2rem;
+        font-size: 1.5rem;
         border: none;
         outline: none;
+        background: #1a1a1a;
+        color: #fff;
         border-radius: 5px;
+    }
+    .correct {
+        color: #00ff00;
+    }
+    .wrong {
+        color: #ff5555;
     }
     #stats {
         margin-top: 20px;
@@ -45,25 +53,42 @@
         background-color: #ff6600;
         color: white;
     }
+    #progressBarContainer {
+        width: 800px;
+        height: 20px;
+        background: #333;
+        margin-top: 20px;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    #progressBar {
+        height: 100%;
+        width: 0%;
+        background: #00ff00;
+        transition: width 0.1s;
+    }
 </style>
 </head>
 <body>
 
-<h1>Typing Practice</h1>
+<h1>Nitro Type Style Typing</h1>
 <div id="prompt"></div>
 <input type="text" id="inputBox" placeholder="Start typing here..." autofocus>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
+</div>
+<div id="progressBarContainer">
+    <div id="progressBar"></div>
 </div>
 <button id="resetBtn">Reset</button>
 
 <script>
 const prompts = [
     "The quick brown fox jumps over the lazy dog.",
-    "Typing practice improves speed and accuracy.",
-    "JavaScript is fun to learn and use in websites.",
-    "Practice makes perfect in all skills.",
-    "Keep calm and type on!"
+    "Typing fast improves your speed and accuracy.",
+    "JavaScript makes websites interactive and fun.",
+    "Practice makes perfect for typing skills.",
+    "Keep calm and type on like a pro."
 ];
 
 let currentPrompt = "";
@@ -76,17 +101,32 @@ const inputBox = document.getElementById('inputBox');
 const wpmSpan = document.getElementById('wpm');
 const accuracySpan = document.getElementById('accuracy');
 const resetBtn = document.getElementById('resetBtn');
+const progressBar = document.getElementById('progressBar');
 
 function newPrompt() {
     const randomIndex = Math.floor(Math.random() * prompts.length);
     currentPrompt = prompts[randomIndex];
-    promptDiv.textContent = currentPrompt;
+    renderPrompt("");
     inputBox.value = "";
     startTime = null;
     totalTyped = 0;
     correctTyped = 0;
     wpmSpan.textContent = 0;
     accuracySpan.textContent = 100;
+    progressBar.style.width = "0%";
+}
+
+function renderPrompt(typed) {
+    let html = "";
+    for (let i = 0; i < currentPrompt.length; i++) {
+        if (i < typed.length) {
+            if (typed[i] === currentPrompt[i]) html += `<span class="correct">${currentPrompt[i]}</span>`;
+            else html += `<span class="wrong">${currentPrompt[i]}</span>`;
+        } else {
+            html += `<span>${currentPrompt[i]}</span>`;
+        }
+    }
+    promptDiv.innerHTML = html;
 }
 
 inputBox.addEventListener('input', () => {
@@ -108,10 +148,13 @@ inputBox.addEventListener('input', () => {
     const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
     wpmSpan.textContent = wpm;
 
+    renderPrompt(typed);
+
+    const progressPercent = Math.min((typed.length / currentPrompt.length) * 100, 100);
+    progressBar.style.width = progressPercent + "%";
+
     if (typed === currentPrompt) {
-        inputBox.style.border = "2px solid #00ff00";
-    } else {
-        inputBox.style.border = "2px solid #ffffff";
+        inputBox.disabled = true;
     }
 });
 
