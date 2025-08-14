@@ -1,21 +1,13 @@
-name: Update Users
-
-on:
-  workflow_dispatch:
-    inputs:
-      username:
-        description: 'Username to add'
-        required: true
-
 jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Update users.json
+      - name: Add username to users.json
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}   # <-- Put it here
         run: |
           USERNAME="${{ github.event.inputs.username }}"
           echo "Adding user: $USERNAME"
