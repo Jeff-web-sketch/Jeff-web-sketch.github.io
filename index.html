@@ -4,101 +4,78 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pickle Type</title>
-<link rel="icon" type="image/jpeg" href="output (2).jpg">
+<link rel="icon" href="output (2).jpg" type="image/jpeg">
 <style>
     body {
-        background-color: #1a1a1a;
-        color: #fff;
-        font-family: monospace;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        min-height: 100vh;
+        background-color: #e1f5c4;
+        font-family: Arial, sans-serif;
+        text-align: center;
         margin: 0;
+        padding: 0;
     }
     h1 {
-        display: flex;
-        align-items: center;
-        gap: 10px;
+        color: #3b6e22;
+        margin-top: 20px;
     }
     #countdown {
         font-size: 2rem;
-        margin-bottom: 20px;
+        margin: 20px 0;
     }
-    #textDisplay {
+    #game {
         font-size: 1.5rem;
-        max-width: 800px;
-        line-height: 2rem;
-        margin-bottom: 20px;
+        margin: 20px;
+    }
+    .char {
+        padding: 2px;
+        border-radius: 3px;
     }
     .current-char {
         background-color: yellow;
-        color: black;
     }
-    .correct {
-        color: lime;
+    .wrong-char {
+        background-color: red;
+        color: white;
     }
-    .incorrect {
-        color: red;
-    }
-    #stats {
-        font-size: 1.2rem;
-    }
-    #endScreen {
+    #results {
         display: none;
-        text-align: center;
+        font-size: 1.5rem;
+        margin-top: 20px;
     }
 </style>
 </head>
 <body>
-
-<h1>🥒 Pickle Type</h1>
+<h1>🥒 Pickle Type 🥒</h1>
 <div id="countdown">3</div>
-<div id="textDisplay"></div>
-<div id="stats">
-    WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
-</div>
-<div id="endScreen">
-    <h2>🏁 Finished!</h2>
-    <p>Your WPM: <span id="finalWpm"></span></p>
-    <p>Your Accuracy: <span id="finalAccuracy"></span>%</p>
-</div>
+<div id="game"></div>
+<div id="results"></div>
+
+<audio id="errorSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
 
 <script>
 const sentences = [
-    "Pickles are crunchy, green, and perfect for typing practice in Pickle Type.",
-    "If you can type this sentence without mistakes, you are a true pickle typing champion.",
-    "Some pickles are sweet, some are sour, but all are delicious in their own way.",
-    "A jar of pickles is like a jar of motivation for your typing journey.",
-    "Typing fast and accurately is as satisfying as opening a fresh jar of dill pickles."
+    "Pickles are green crunchy and delicious",
+    "Typing fast is the key to winning Pickle Type",
+    "The juicy pickle sat on the sandwich waiting to be eaten",
+    "Racing against the clock makes Pickle Type intense"
 ];
 
 let currentSentence = "";
-let currentIndex = 0;
-let startTime = null;
-let correctCount = 0;
-let typedCount = 0;
-let timer;
-let running = false;
-
-const textDisplay = document.getElementById("textDisplay");
-const wpmSpan = document.getElementById("wpm");
-const accuracySpan = document.getElementById("accuracy");
-const countdownDiv = document.getElementById("countdown");
-const endScreen = document.getElementById("endScreen");
-const finalWpm = document.getElementById("finalWpm");
-const finalAccuracy = document.getElementById("finalAccuracy");
+let currentCharIndex = 0;
+let correctChars = 0;
+let totalChars = 0;
+let startTime;
+let countdown = 3;
+let errorSound = document.getElementById("errorSound");
 
 function startCountdown() {
-    let count = 3;
-    countdownDiv.textContent = count;
-    const countdownTimer = setInterval(() => {
-        count--;
-        countdownDiv.textContent = count > 0 ? count : "Go!";
-        if (count < 0) {
-            clearInterval(countdownTimer);
-            countdownDiv.style.display = "none";
+    document.getElementById("countdown").textContent = countdown;
+    const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0) {
+            document.getElementById("countdown").textContent = countdown;
+        } else {
+            clearInterval(countdownInterval);
+            document.getElementById("countdown").style.display = "none";
             startGame();
         }
     }, 1000);
@@ -106,71 +83,63 @@ function startCountdown() {
 
 function startGame() {
     currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
-    currentIndex = 0;
-    correctCount = 0;
-    typedCount = 0;
-    startTime = new Date();
-    running = true;
+    totalChars = currentSentence.length;
     displaySentence();
+    startTime = new Date();
     document.addEventListener("keydown", handleTyping);
-    timer = setInterval(updateStats, 100);
 }
 
 function displaySentence() {
-    textDisplay.innerHTML = "";
+    const gameDiv = document.getElementById("game");
+    gameDiv.innerHTML = "";
     for (let i = 0; i < currentSentence.length; i++) {
         const span = document.createElement("span");
         span.textContent = currentSentence[i];
-        if (i === currentIndex) span.classList.add("current-char");
-        textDisplay.appendChild(span);
+        span.classList.add("char");
+        if (i === currentCharIndex) {
+            span.classList.add("current-char");
+        }
+        gameDiv.appendChild(span);
     }
 }
 
 function handleTyping(e) {
-    if (!running) return;
-    const key = e.key;
-    if (key.length !== 1) return; // ignore special keys
+    if (currentCharIndex >= totalChars) return;
 
-    const spans = textDisplay.querySelectorAll("span");
-    if (currentIndex < currentSentence.length) {
-        const currentChar = currentSentence[currentIndex];
-        if (key === currentChar) {
-            spans[currentIndex].classList.remove("current-char");
-            spans[currentIndex].classList.add("correct");
-            correctCount++;
+    const expectedChar = currentSentence[currentCharIndex];
+    const key = e.key;
+
+    if (key.length === 1) {
+        const spans = document.querySelectorAll(".char");
+        if (key === expectedChar) {
+            spans[currentCharIndex].classList.remove("wrong-char");
+            spans[currentCharIndex].classList.remove("current-char");
+            correctChars++;
+            currentCharIndex++;
+            if (currentCharIndex === totalChars) {
+                endGame();
+                return;
+            }
+            spans[currentCharIndex].classList.add("current-char");
         } else {
-            spans[currentIndex].classList.remove("current-char");
-            spans[currentIndex].classList.add("incorrect");
-        }
-        typedCount++;
-        currentIndex++;
-        if (currentIndex < currentSentence.length) {
-            spans[currentIndex].classList.add("current-char");
-        } else {
-            endGame();
+            spans[currentCharIndex].classList.add("wrong-char");
+            errorSound.play();
+            return; // stay on same char
         }
     }
 }
 
-function updateStats() {
-    const elapsedMinutes = (new Date() - startTime) / 60000;
-    const wpm = Math.round((correctCount / 5) / elapsedMinutes);
-    const accuracy = typedCount > 0 ? Math.round((correctCount / typedCount) * 100) : 100;
-    wpmSpan.textContent = wpm;
-    accuracySpan.textContent = accuracy;
-}
-
 function endGame() {
-    running = false;
-    clearInterval(timer);
-    document.removeEventListener("keydown", handleTyping);
-    finalWpm.textContent = wpmSpan.textContent;
-    finalAccuracy.textContent = accuracySpan.textContent;
-    endScreen.style.display = "block";
+    const elapsedTime = (new Date() - startTime) / 1000 / 60;
+    const wpm = Math.round((correctChars / 5) / elapsedTime);
+    const accuracy = Math.round((correctChars / totalChars) * 100);
+    document.getElementById("game").style.display = "none";
+    document.getElementById("results").style.display = "block";
+    document.getElementById("results").textContent =
+        `WPM: ${wpm} | Accuracy: ${accuracy}%`;
 }
 
 startCountdown();
 </script>
-
 </body>
 </html>
