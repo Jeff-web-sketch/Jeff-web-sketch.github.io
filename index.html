@@ -6,15 +6,23 @@
 <title>Pickle Type</title>
 <style>
     body {
-        background-color: #0e2d1b;
-        color: #fff;
+        background-color: #1b1b1b;
+        color: white;
         font-family: monospace;
         text-align: center;
-        margin: 0;
         padding: 20px;
     }
-    h1 {
-        color: #a8ff91;
+    header {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    header img {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
     }
     #countdown {
         font-size: 2rem;
@@ -23,22 +31,20 @@
     #prompt {
         font-size: 1.5rem;
         max-width: 800px;
-        margin: 20px auto;
+        margin: auto;
         line-height: 2rem;
     }
     .word {
-        padding: 3px;
-        border-radius: 3px;
+        padding: 2px 4px;
+        border-radius: 5px;
     }
     .current {
-        background-color: #3c6e47;
+        background-color: yellow;
+        color: black;
     }
     .wrong {
-        background-color: #ff4a4a;
-    }
-    .correct {
-        background-color: #4aff6a;
-        color: black;
+        background-color: red;
+        color: white;
     }
     #stats {
         margin-top: 20px;
@@ -46,131 +52,150 @@
     }
     #endScreen {
         display: none;
-        margin-top: 30px;
-        background: #164d2f;
-        padding: 20px;
-        border-radius: 10px;
+        margin-top: 40px;
     }
-    #endScreen h2 {
-        margin: 0;
-        color: #a8ff91;
+    button {
+        padding: 10px 20px;
+        font-size: 1rem;
+        background: #4caf50;
+        border: none;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
     }
 </style>
 </head>
 <body>
 
-<h1>🥒 Pickle Type 🥒</h1>
-<div id="countdown"></div>
+<header>
+    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Dill_pickle.jpg/640px-Dill_pickle.jpg" alt="Pickle">
+    <h1>Pickle Type</h1>
+</header>
+
+<div id="countdown">3</div>
 <div id="prompt"></div>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
+
 <div id="endScreen">
-    <h2>Race Finished!</h2>
-    <p>Your WPM: <span id="finalWpm"></span></p>
-    <p>Your Accuracy: <span id="finalAccuracy"></span>%</p>
+    <h2>Finished!</h2>
+    <p>WPM: <span id="finalWpm"></span></p>
+    <p>Accuracy: <span id="finalAccuracy"></span>%</p>
+    <button onclick="startGame()">Play Again</button>
 </div>
 
 <script>
-const sentences = [
-    "Pickles are life especially when typing as fast as you possibly can while imagining cucumbers turning into tasty crunchy green delights.",
-    "Racing through sentences is like racing through a jar of pickles one word at a time crisp and satisfying with every correct keystroke.",
-    "Some people like sweet pickles others like dill but everyone loves a challenge especially when it comes to fast accurate typing games."
+const prompts = [
+    "Pickles are amazing when you put them on sandwiches with cheese, lettuce, tomato, and just the right amount of mayonnaise.",
+    "Some people like sweet pickles, while others prefer sour dill pickles that have been brined for weeks in vinegar and spices.",
+    "In a competitive pickle typing game, you must type fast and accurately to beat your previous record.",
+    "Typing about pickles may seem strange, but it can be surprisingly fun and even make you crave a crunchy snack."
 ];
 
 let words = [];
 let currentWordIndex = 0;
-let startTime = null;
-let typedChars = 0;
 let correctChars = 0;
-let countdownValue = 3;
-let raceStarted = false;
+let totalTypedChars = 0;
+let startTime = null;
+let timerInterval = null;
 
-const countdownDiv = document.getElementById('countdown');
-const promptDiv = document.getElementById('prompt');
-const wpmSpan = document.getElementById('wpm');
-const accuracySpan = document.getElementById('accuracy');
+const countdownEl = document.getElementById('countdown');
+const promptEl = document.getElementById('prompt');
+const wpmEl = document.getElementById('wpm');
+const accuracyEl = document.getElementById('accuracy');
 const endScreen = document.getElementById('endScreen');
-const finalWpm = document.getElementById('finalWpm');
-const finalAccuracy = document.getElementById('finalAccuracy');
+const finalWpmEl = document.getElementById('finalWpm');
+const finalAccuracyEl = document.getElementById('finalAccuracy');
 
-function loadPrompt() {
-    const sentence = sentences[Math.floor(Math.random() * sentences.length)];
-    words = sentence.split(" ");
-    promptDiv.innerHTML = words.map((word, i) =>
-        `<span class="word ${i === 0 ? 'current' : ''}">${word}</span>`
-    ).join(" ");
-}
-
-function startCountdown() {
-    countdownDiv.textContent = countdownValue;
-    const interval = setInterval(() => {
-        countdownValue--;
-        if (countdownValue > 0) {
-            countdownDiv.textContent = countdownValue;
-        } else {
-            clearInterval(interval);
-            countdownDiv.textContent = "GO!";
-            setTimeout(() => countdownDiv.textContent = "", 500);
-            raceStarted = true;
-            startTime = new Date();
+function startGame() {
+    endScreen.style.display = 'none';
+    countdownEl.style.display = 'block';
+    promptEl.innerHTML = '';
+    currentWordIndex = 0;
+    correctChars = 0;
+    totalTypedChars = 0;
+    startTime = null;
+    clearInterval(timerInterval);
+    let count = 3;
+    countdownEl.textContent = count;
+    const countdownTimer = setInterval(() => {
+        count--;
+        countdownEl.textContent = count > 0 ? count : "GO!";
+        if (count < 0) {
+            clearInterval(countdownTimer);
+            countdownEl.style.display = 'none';
+            beginTyping();
         }
     }, 1000);
+}
+
+function beginTyping() {
+    words = prompts[Math.floor(Math.random() * prompts.length)].split(' ');
+    renderPrompt();
+    currentWordIndex = 0;
+    startTime = new Date();
+    document.addEventListener('keydown', handleTyping);
+    timerInterval = setInterval(updateStats, 100);
+}
+
+function renderPrompt() {
+    promptEl.innerHTML = words.map((word, i) => {
+        let classes = "word";
+        if (i === currentWordIndex) classes += " current";
+        return `<span class="${classes}">${word}</span>`;
+    }).join(' ');
+}
+
+let currentInput = "";
+
+function handleTyping(e) {
+    if (!startTime) startTime = new Date();
+    if (e.key.length === 1 && e.key !== " ") {
+        currentInput += e.key;
+        totalTypedChars++;
+        checkCurrentWord();
+    }
+    if (e.key === " ") {
+        if (currentInput.trim() === words[currentWordIndex]) {
+            correctChars += words[currentWordIndex].length;
+        }
+        currentWordIndex++;
+        currentInput = "";
+        if (currentWordIndex >= words.length) {
+            endGame();
+        } else {
+            renderPrompt();
+        }
+    }
+}
+
+function checkCurrentWord() {
+    const currentWord = words[currentWordIndex];
+    const wordEls = document.querySelectorAll(".word");
+    if (currentWord.startsWith(currentInput)) {
+        wordEls[currentWordIndex].classList.remove("wrong");
+    } else {
+        wordEls[currentWordIndex].classList.add("wrong");
+    }
 }
 
 function updateStats() {
     const elapsedMinutes = (new Date() - startTime) / 60000;
     const wpm = Math.round((correctChars / 5) / elapsedMinutes);
-    const accuracy = typedChars === 0 ? 100 : Math.round((correctChars / typedChars) * 100);
-    wpmSpan.textContent = wpm;
-    accuracySpan.textContent = accuracy;
+    wpmEl.textContent = wpm;
+    const accuracy = totalTypedChars > 0 ? Math.round((correctChars / totalTypedChars) * 100) : 100;
+    accuracyEl.textContent = accuracy;
 }
 
-document.addEventListener('keydown', (e) => {
-    if (!raceStarted || e.key.length !== 1 && e.key !== " ") return;
-
-    let currentWordElem = document.querySelectorAll('.word')[currentWordIndex];
-    let currentWordText = words[currentWordIndex];
-
-    if (!currentWordElem.dataset.progress) currentWordElem.dataset.progress = "";
-
-    if (e.key === " ") {
-        if (currentWordElem.dataset.progress.trim() === currentWordText) {
-            currentWordElem.classList.remove("current", "wrong");
-            currentWordElem.classList.add("correct");
-        } else {
-            currentWordElem.classList.remove("current");
-            currentWordElem.classList.add("wrong");
-        }
-        currentWordIndex++;
-        if (currentWordIndex >= words.length) {
-            endRace();
-            return;
-        }
-        document.querySelectorAll('.word').forEach(w => w.classList.remove("current"));
-        document.querySelectorAll('.word')[currentWordIndex].classList.add("current");
-    } else {
-        typedChars++;
-        currentWordElem.dataset.progress += e.key;
-        if (currentWordElem.dataset.progress === currentWordText.substring(0, currentWordElem.dataset.progress.length)) {
-            correctChars++;
-            currentWordElem.classList.remove("wrong");
-        } else {
-            currentWordElem.classList.add("wrong");
-        }
-    }
-    updateStats();
-});
-
-function endRace() {
-    raceStarted = false;
-    finalWpm.textContent = wpmSpan.textContent;
-    finalAccuracy.textContent = accuracySpan.textContent;
-    endScreen.style.display = "block";
+function endGame() {
+    clearInterval(timerInterval);
+    document.removeEventListener('keydown', handleTyping);
+    finalWpmEl.textContent = wpmEl.textContent;
+    finalAccuracyEl.textContent = accuracyEl.textContent;
+    endScreen.style.display = 'block';
 }
-
-loadPrompt();
-startCountdown();
+startGame();
 </script>
 
 </body>
