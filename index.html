@@ -4,198 +4,172 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pickle Type</title>
+<link rel="icon" type="image/jpeg" href="output (2).jpg">
 <style>
     body {
-        background-color: #1b1b1b;
-        color: white;
+        background-color: #1a1a1a;
+        color: #fff;
         font-family: monospace;
-        text-align: center;
-        padding: 20px;
-    }
-    header {
         display: flex;
+        flex-direction: column;
         align-items: center;
         justify-content: center;
-        gap: 10px;
-        margin-bottom: 20px;
+        min-height: 100vh;
+        margin: 0;
     }
-    header img {
-        width: 50px;
-        height: 50px;
-        border-radius: 50%;
+    h1 {
+        display: flex;
+        align-items: center;
+        gap: 10px;
     }
     #countdown {
         font-size: 2rem;
         margin-bottom: 20px;
     }
-    #prompt {
+    #textDisplay {
         font-size: 1.5rem;
         max-width: 800px;
-        margin: auto;
         line-height: 2rem;
+        margin-bottom: 20px;
     }
-    .word {
-        padding: 2px 4px;
-        border-radius: 5px;
-    }
-    .current {
+    .current-char {
         background-color: yellow;
         color: black;
     }
-    .wrong {
-        background-color: red;
-        color: white;
+    .correct {
+        color: lime;
+    }
+    .incorrect {
+        color: red;
     }
     #stats {
-        margin-top: 20px;
         font-size: 1.2rem;
     }
     #endScreen {
         display: none;
-        margin-top: 40px;
-    }
-    button {
-        padding: 10px 20px;
-        font-size: 1rem;
-        background: #4caf50;
-        border: none;
-        color: white;
-        border-radius: 5px;
-        cursor: pointer;
+        text-align: center;
     }
 </style>
 </head>
 <body>
 
-<header>
-    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6a/Dill_pickle.jpg/640px-Dill_pickle.jpg" alt="Pickle">
-    <h1>Pickle Type</h1>
-</header>
-
+<h1>🥒 Pickle Type</h1>
 <div id="countdown">3</div>
-<div id="prompt"></div>
+<div id="textDisplay"></div>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
-
 <div id="endScreen">
-    <h2>Finished!</h2>
-    <p>WPM: <span id="finalWpm"></span></p>
-    <p>Accuracy: <span id="finalAccuracy"></span>%</p>
-    <button onclick="startGame()">Play Again</button>
+    <h2>🏁 Finished!</h2>
+    <p>Your WPM: <span id="finalWpm"></span></p>
+    <p>Your Accuracy: <span id="finalAccuracy"></span>%</p>
 </div>
 
 <script>
-const prompts = [
-    "Pickles are amazing when you put them on sandwiches with cheese, lettuce, tomato, and just the right amount of mayonnaise.",
-    "Some people like sweet pickles, while others prefer sour dill pickles that have been brined for weeks in vinegar and spices.",
-    "In a competitive pickle typing game, you must type fast and accurately to beat your previous record.",
-    "Typing about pickles may seem strange, but it can be surprisingly fun and even make you crave a crunchy snack."
+const sentences = [
+    "Pickles are crunchy, green, and perfect for typing practice in Pickle Type.",
+    "If you can type this sentence without mistakes, you are a true pickle typing champion.",
+    "Some pickles are sweet, some are sour, but all are delicious in their own way.",
+    "A jar of pickles is like a jar of motivation for your typing journey.",
+    "Typing fast and accurately is as satisfying as opening a fresh jar of dill pickles."
 ];
 
-let words = [];
-let currentWordIndex = 0;
-let correctChars = 0;
-let totalTypedChars = 0;
+let currentSentence = "";
+let currentIndex = 0;
 let startTime = null;
-let timerInterval = null;
+let correctCount = 0;
+let typedCount = 0;
+let timer;
+let running = false;
 
-const countdownEl = document.getElementById('countdown');
-const promptEl = document.getElementById('prompt');
-const wpmEl = document.getElementById('wpm');
-const accuracyEl = document.getElementById('accuracy');
-const endScreen = document.getElementById('endScreen');
-const finalWpmEl = document.getElementById('finalWpm');
-const finalAccuracyEl = document.getElementById('finalAccuracy');
+const textDisplay = document.getElementById("textDisplay");
+const wpmSpan = document.getElementById("wpm");
+const accuracySpan = document.getElementById("accuracy");
+const countdownDiv = document.getElementById("countdown");
+const endScreen = document.getElementById("endScreen");
+const finalWpm = document.getElementById("finalWpm");
+const finalAccuracy = document.getElementById("finalAccuracy");
 
-function startGame() {
-    endScreen.style.display = 'none';
-    countdownEl.style.display = 'block';
-    promptEl.innerHTML = '';
-    currentWordIndex = 0;
-    correctChars = 0;
-    totalTypedChars = 0;
-    startTime = null;
-    clearInterval(timerInterval);
+function startCountdown() {
     let count = 3;
-    countdownEl.textContent = count;
+    countdownDiv.textContent = count;
     const countdownTimer = setInterval(() => {
         count--;
-        countdownEl.textContent = count > 0 ? count : "GO!";
+        countdownDiv.textContent = count > 0 ? count : "Go!";
         if (count < 0) {
             clearInterval(countdownTimer);
-            countdownEl.style.display = 'none';
-            beginTyping();
+            countdownDiv.style.display = "none";
+            startGame();
         }
     }, 1000);
 }
 
-function beginTyping() {
-    words = prompts[Math.floor(Math.random() * prompts.length)].split(' ');
-    renderPrompt();
-    currentWordIndex = 0;
+function startGame() {
+    currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
+    currentIndex = 0;
+    correctCount = 0;
+    typedCount = 0;
     startTime = new Date();
-    document.addEventListener('keydown', handleTyping);
-    timerInterval = setInterval(updateStats, 100);
+    running = true;
+    displaySentence();
+    document.addEventListener("keydown", handleTyping);
+    timer = setInterval(updateStats, 100);
 }
 
-function renderPrompt() {
-    promptEl.innerHTML = words.map((word, i) => {
-        let classes = "word";
-        if (i === currentWordIndex) classes += " current";
-        return `<span class="${classes}">${word}</span>`;
-    }).join(' ');
+function displaySentence() {
+    textDisplay.innerHTML = "";
+    for (let i = 0; i < currentSentence.length; i++) {
+        const span = document.createElement("span");
+        span.textContent = currentSentence[i];
+        if (i === currentIndex) span.classList.add("current-char");
+        textDisplay.appendChild(span);
+    }
 }
-
-let currentInput = "";
 
 function handleTyping(e) {
-    if (!startTime) startTime = new Date();
-    if (e.key.length === 1 && e.key !== " ") {
-        currentInput += e.key;
-        totalTypedChars++;
-        checkCurrentWord();
-    }
-    if (e.key === " ") {
-        if (currentInput.trim() === words[currentWordIndex]) {
-            correctChars += words[currentWordIndex].length;
-        }
-        currentWordIndex++;
-        currentInput = "";
-        if (currentWordIndex >= words.length) {
-            endGame();
-        } else {
-            renderPrompt();
-        }
-    }
-}
+    if (!running) return;
+    const key = e.key;
+    if (key.length !== 1) return; // ignore special keys
 
-function checkCurrentWord() {
-    const currentWord = words[currentWordIndex];
-    const wordEls = document.querySelectorAll(".word");
-    if (currentWord.startsWith(currentInput)) {
-        wordEls[currentWordIndex].classList.remove("wrong");
-    } else {
-        wordEls[currentWordIndex].classList.add("wrong");
+    const spans = textDisplay.querySelectorAll("span");
+    if (currentIndex < currentSentence.length) {
+        const currentChar = currentSentence[currentIndex];
+        if (key === currentChar) {
+            spans[currentIndex].classList.remove("current-char");
+            spans[currentIndex].classList.add("correct");
+            correctCount++;
+        } else {
+            spans[currentIndex].classList.remove("current-char");
+            spans[currentIndex].classList.add("incorrect");
+        }
+        typedCount++;
+        currentIndex++;
+        if (currentIndex < currentSentence.length) {
+            spans[currentIndex].classList.add("current-char");
+        } else {
+            endGame();
+        }
     }
 }
 
 function updateStats() {
     const elapsedMinutes = (new Date() - startTime) / 60000;
-    const wpm = Math.round((correctChars / 5) / elapsedMinutes);
-    wpmEl.textContent = wpm;
-    const accuracy = totalTypedChars > 0 ? Math.round((correctChars / totalTypedChars) * 100) : 100;
-    accuracyEl.textContent = accuracy;
+    const wpm = Math.round((correctCount / 5) / elapsedMinutes);
+    const accuracy = typedCount > 0 ? Math.round((correctCount / typedCount) * 100) : 100;
+    wpmSpan.textContent = wpm;
+    accuracySpan.textContent = accuracy;
 }
 
 function endGame() {
-    clearInterval(timerInterval);
-    document.removeEventListener('keydown', handleTyping);
-    finalWpmEl.textContent = wpmEl.textContent;
-    finalAccuracyEl.textContent = accuracyEl.textContent;
-    endScreen.style.display = 'block';
+    running = false;
+    clearInterval(timer);
+    document.removeEventListener("keydown", handleTyping);
+    finalWpm.textContent = wpmSpan.textContent;
+    finalAccuracy.textContent = accuracySpan.textContent;
+    endScreen.style.display = "block";
 }
-startGame();
+
+startCountdown();
 </script>
 
 </body>
