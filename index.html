@@ -4,169 +4,210 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pickle Type</title>
-<link rel="icon" href="output (2).jpg" type="image/jpeg">
+<link rel="icon" type="image/jpeg" href="output (2).jpg">
 <style>
     body {
-        background-color: #e1f5c4;
         font-family: Arial, sans-serif;
+        background-color: #d4ed91;
         text-align: center;
+        color: #2c3e50;
         margin: 0;
         padding: 0;
     }
     h1 {
-        color: #3b6e22;
+        font-size: 3em;
         margin-top: 20px;
+        color: #2e7d32;
     }
     #countdown {
-        font-size: 2rem;
-        margin: 20px 0;
-    }
-    #game {
-        font-size: 1.5rem;
+        font-size: 2em;
         margin: 20px;
     }
-    .char {
-        padding: 2px;
-        border-radius: 3px;
-    }
-    .current-char {
-        background-color: yellow;
-    }
-    .wrong-char {
-        background-color: red;
-        color: white;
-    }
-    #results {
+    #game {
         display: none;
-        font-size: 1.5rem;
-        margin-top: 20px;
+        margin-top: 30px;
     }
-    #playAgain {
-        display: none;
+    #words {
+        font-size: 1.5em;
+        max-width: 800px;
+        margin: auto;
+        text-align: left;
+        line-height: 2em;
+    }
+    .correct { color: green; }
+    .incorrect { color: red; }
+    .current { background-color: yellow; }
+    #stats {
         margin-top: 20px;
+        font-size: 1.2em;
+    }
+    #endScreen {
+        display: none;
+        margin-top: 50px;
+    }
+    button {
         padding: 10px 20px;
-        font-size: 1rem;
+        font-size: 1.2em;
         background-color: #4caf50;
         color: white;
         border: none;
-        border-radius: 5px;
         cursor: pointer;
+        border-radius: 5px;
     }
-    #playAgain:hover {
-        background-color: #45a049;
+    button:hover {
+        background-color: #388e3c;
     }
 </style>
 </head>
 <body>
-<h1>🥒 Pickle Type 🥒</h1>
-<div id="countdown">3</div>
-<div id="game"></div>
-<div id="results"></div>
-<button id="playAgain">Play Again</button>
 
-<audio id="errorSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
+<h1>🥒 Pickle Type 🥒</h1>
+<div id="countdown"></div>
+
+<div id="game">
+    <div id="words"></div>
+    <div id="stats">
+        WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>% | Super Pickles Left: <span id="superPickles">3</span>
+    </div>
+</div>
+
+<div id="endScreen">
+    <h2>Game Over!</h2>
+    <p>WPM: <span id="finalWpm"></span></p>
+    <p>Accuracy: <span id="finalAccuracy"></span>%</p>
+    <button onclick="startGame()">Play Again</button>
+</div>
+
+<audio id="errorSound" src="https://www.soundjay.com/buttons/sounds/beep-07.mp3"></audio>
 
 <script>
 const sentences = [
-    "Pickles are green crunchy and delicious",
-    "Typing fast is the key to winning Pickle Type",
-    "The juicy pickle sat on the sandwich waiting to be eaten",
-    "Racing against the clock makes Pickle Type intense"
+    "Pickles are crunchy and green",
+    "Super Pickles can skip a word when you press enter",
+    "Typing fast and accurate is the key to victory",
+    "This is the ultimate pickle typing challenge for champions",
+    "Speed is important but accuracy will win the pickle crown"
 ];
-
-let currentSentence = "";
+let words = [];
+let currentWordIndex = 0;
 let currentCharIndex = 0;
 let correctChars = 0;
 let totalChars = 0;
 let startTime;
-let countdown = 3;
+let timer;
+let superPickles = 3;
 let errorSound = document.getElementById("errorSound");
 
 function startCountdown() {
-    document.getElementById("countdown").textContent = countdown;
-    const countdownInterval = setInterval(() => {
-        countdown--;
-        if (countdown > 0) {
-            document.getElementById("countdown").textContent = countdown;
+    document.getElementById("endScreen").style.display = "none";
+    document.getElementById("countdown").innerText = 3;
+    let count = 3;
+    let countdownInterval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            document.getElementById("countdown").innerText = count;
         } else {
             clearInterval(countdownInterval);
-            document.getElementById("countdown").style.display = "none";
+            document.getElementById("countdown").innerText = "";
             startGame();
         }
     }, 1000);
 }
 
 function startGame() {
-    currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
-    totalChars = currentSentence.length;
+    document.getElementById("endScreen").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    superPickles = 3;
+    currentWordIndex = 0;
     currentCharIndex = 0;
     correctChars = 0;
-    displaySentence();
-    startTime = new Date();
-    document.addEventListener("keydown", handleTyping);
+    totalChars = 0;
+    words = sentences[Math.floor(Math.random() * sentences.length)].split(" ");
+    renderWords();
+    startTime = Date.now();
+    timer = setInterval(updateWPM, 1000);
+    document.getElementById("superPickles").innerText = superPickles;
 }
 
-function displaySentence() {
-    const gameDiv = document.getElementById("game");
-    gameDiv.style.display = "block";
-    gameDiv.innerHTML = "";
-    for (let i = 0; i < currentSentence.length; i++) {
-        const span = document.createElement("span");
-        span.textContent = currentSentence[i];
-        span.classList.add("char");
-        if (i === currentCharIndex) {
-            span.classList.add("current-char");
+function renderWords() {
+    let display = "";
+    words.forEach((word, i) => {
+        if (i === currentWordIndex) {
+            let highlightedWord = "";
+            for (let j = 0; j < word.length; j++) {
+                if (j < currentCharIndex) {
+                    highlightedWord += `<span class="${word[j] === typedChars[j] ? 'correct' : 'incorrect'}">${word[j]}</span>`;
+                } else if (j === currentCharIndex) {
+                    highlightedWord += `<span class="current">${word[j]}</span>`;
+                } else {
+                    highlightedWord += word[j];
+                }
+            }
+            display += `<span>${highlightedWord}</span> `;
+        } else {
+            display += `<span>${word}</span> `;
         }
-        gameDiv.appendChild(span);
-    }
+    });
+    document.getElementById("words").innerHTML = display;
 }
 
-function handleTyping(e) {
-    if (currentCharIndex >= totalChars) return;
+let typedChars = [];
 
-    const expectedChar = currentSentence[currentCharIndex];
-    const key = e.key;
+document.addEventListener("keydown", (e) => {
+    if (document.getElementById("game").style.display === "none") return;
 
-    if (key.length === 1) {
-        const spans = document.querySelectorAll(".char");
-        if (key === expectedChar) {
-            spans[currentCharIndex].classList.remove("wrong-char");
-            spans[currentCharIndex].classList.remove("current-char");
+    if (e.key === "Enter" && superPickles > 0) {
+        superPickles--;
+        currentWordIndex++;
+        currentCharIndex = 0;
+        typedChars = [];
+        document.getElementById("superPickles").innerText = superPickles;
+        if (currentWordIndex >= words.length) endGame();
+        renderWords();
+        return;
+    }
+
+    if (e.key.length === 1) {
+        totalChars++;
+        typedChars[currentCharIndex] = e.key;
+        if (e.key === words[currentWordIndex][currentCharIndex]) {
             correctChars++;
             currentCharIndex++;
-            if (currentCharIndex === totalChars) {
-                endGame();
-                return;
+            if (currentCharIndex >= words[currentWordIndex].length) {
+                currentWordIndex++;
+                currentCharIndex = 0;
+                typedChars = [];
+                if (currentWordIndex >= words.length) endGame();
             }
-            spans[currentCharIndex].classList.add("current-char");
         } else {
-            spans[currentCharIndex].classList.add("wrong-char");
             errorSound.play();
-            return;
         }
+        renderWords();
+    } else if (e.key === "Backspace" && currentCharIndex > 0) {
+        currentCharIndex--;
+        typedChars.pop();
+        renderWords();
     }
+});
+
+function updateWPM() {
+    let elapsedMinutes = (Date.now() - startTime) / 60000;
+    let wpm = Math.round((correctChars / 5) / elapsedMinutes);
+    let accuracy = totalChars > 0 ? Math.round((correctChars / totalChars) * 100) : 100;
+    document.getElementById("wpm").innerText = wpm;
+    document.getElementById("accuracy").innerText = accuracy;
 }
 
 function endGame() {
-    const elapsedTime = (new Date() - startTime) / 1000 / 60;
-    const wpm = Math.round((correctChars / 5) / elapsedTime);
-    const accuracy = Math.round((correctChars / totalChars) * 100);
+    clearInterval(timer);
     document.getElementById("game").style.display = "none";
-    document.getElementById("results").style.display = "block";
-    document.getElementById("results").textContent =
-        `WPM: ${wpm} | Accuracy: ${accuracy}%`;
-    document.getElementById("playAgain").style.display = "inline-block";
+    document.getElementById("endScreen").style.display = "block";
+    document.getElementById("finalWpm").innerText = document.getElementById("wpm").innerText;
+    document.getElementById("finalAccuracy").innerText = document.getElementById("accuracy").innerText;
 }
-
-document.getElementById("playAgain").addEventListener("click", () => {
-    document.getElementById("results").style.display = "none";
-    document.getElementById("playAgain").style.display = "none";
-    document.getElementById("countdown").style.display = "block";
-    countdown = 3;
-    startCountdown();
-});
 
 startCountdown();
 </script>
+
 </body>
 </html>
