@@ -41,6 +41,20 @@
         font-size: 1.5rem;
         margin-top: 20px;
     }
+    #playAgain {
+        display: none;
+        margin-top: 20px;
+        padding: 10px 20px;
+        font-size: 1rem;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+    #playAgain:hover {
+        background-color: #45a049;
+    }
 </style>
 </head>
 <body>
@@ -48,6 +62,7 @@
 <div id="countdown">3</div>
 <div id="game"></div>
 <div id="results"></div>
+<button id="playAgain">Play Again</button>
 
 <audio id="errorSound" src="https://www.soundjay.com/button/beep-07.wav" preload="auto"></audio>
 
@@ -84,6 +99,8 @@ function startCountdown() {
 function startGame() {
     currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
     totalChars = currentSentence.length;
+    currentCharIndex = 0;
+    correctChars = 0;
     displaySentence();
     startTime = new Date();
     document.addEventListener("keydown", handleTyping);
@@ -91,6 +108,7 @@ function startGame() {
 
 function displaySentence() {
     const gameDiv = document.getElementById("game");
+    gameDiv.style.display = "block";
     gameDiv.innerHTML = "";
     for (let i = 0; i < currentSentence.length; i++) {
         const span = document.createElement("span");
@@ -124,7 +142,7 @@ function handleTyping(e) {
         } else {
             spans[currentCharIndex].classList.add("wrong-char");
             errorSound.play();
-            return; // stay on same char
+            return;
         }
     }
 }
@@ -137,7 +155,16 @@ function endGame() {
     document.getElementById("results").style.display = "block";
     document.getElementById("results").textContent =
         `WPM: ${wpm} | Accuracy: ${accuracy}%`;
+    document.getElementById("playAgain").style.display = "inline-block";
 }
+
+document.getElementById("playAgain").addEventListener("click", () => {
+    document.getElementById("results").style.display = "none";
+    document.getElementById("playAgain").style.display = "none";
+    document.getElementById("countdown").style.display = "block";
+    countdown = 3;
+    startCountdown();
+});
 
 startCountdown();
 </script>
