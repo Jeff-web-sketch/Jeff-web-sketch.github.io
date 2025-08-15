@@ -134,36 +134,37 @@ function updateStats() {
     statsDiv.innerHTML = `WPM: ${wpm} | Accuracy: ${accuracy}% | Super Pickle: ${superPickle}`;
 }
 
-document.addEventListener("keydown", (e) => {
-    if (!startTime) startTime = Date.now();
+    document.addEventListener("keydown", (e) => {
+        e.preventDefault(); // stops the macOS error sound
+        if (!startTime) startTime = Date.now();
 
-    if (e.key === "Enter" && superPickle > 0) {
-        let spaceIndex = currentSentence.indexOf(" ", currentIndex);
-        if (spaceIndex === -1) currentIndex = currentSentence.length;
-        else currentIndex = spaceIndex + 1;
-        superPickle--;
-        renderSentence();
-        updateStats();
-        return;
-    }
-
-    if (e.key.length === 1) {
-        totalChars++;
-        if (e.key === currentSentence[currentIndex]) {
-            currentIndex++;
-            if (currentIndex >= currentSentence.length) {
-                endGame();
-                return;
-            }
-        } else {
-            errors++;
-            wrongSound.currentTime = 0;
-            wrongSound.play();
+        if (e.key === "Enter" && superPickle > 0) {
+            let spaceIndex = currentSentence.indexOf(" ", currentIndex);
+            if (spaceIndex === -1) currentIndex = currentSentence.length;
+            else currentIndex = spaceIndex + 1;
+            superPickle--;
+            renderSentence();
+            updateStats();
+            return;
         }
-        renderSentence();
-        updateStats();
-    }
-});
+
+        if (e.key.length === 1) {
+            totalChars++;
+            if (e.key === currentSentence[currentIndex]) {
+                currentIndex++;
+                if (currentIndex >= currentSentence.length) {
+                    endGame();
+                    return;
+                }
+            } else {
+                errors++;
+                wrongSound.currentTime = 0;
+                wrongSound.play();
+            }
+            renderSentence();
+            updateStats();
+        }
+    });
 
 function endGame() {
     let elapsed = (Date.now() - startTime) / 1000 / 60;
