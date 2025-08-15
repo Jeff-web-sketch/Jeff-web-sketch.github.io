@@ -6,230 +6,171 @@
 <title>Pickle Type</title>
 <style>
     body {
-        background-color: #0f1f0f;
-        color: #d9ffd9;
+        background-color: #0e2d1b;
+        color: #fff;
         font-family: monospace;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding-top: 50px;
-        user-select: none;
+        text-align: center;
+        margin: 0;
+        padding: 20px;
+    }
+    h1 {
+        color: #a8ff91;
     }
     #countdown {
-        font-size: 3rem;
+        font-size: 2rem;
         margin-bottom: 20px;
     }
     #prompt {
-        font-size: 1.8rem;
-        max-width: 900px;
-        margin-bottom: 30px;
-        line-height: 2.5rem;
-        white-space: pre-wrap;
-    }
-    .correct { color: #00ff00; }
-    #stats { margin-top: 20px; font-size: 1.2rem; }
-    #track {
-        width: 900px;
-        height: 50px;
-        background: #334433;
-        border-radius: 25px;
-        margin-top: 30px;
-        position: relative;
-        overflow: hidden;
-        border: 2px solid #55aa55;
-    }
-    #car {
-        width: 50px;
-        height: 50px;
-        background-color: #55aa55;
-        border-radius: 25px;
-        position: absolute;
-        left: 0;
-        top: 0;
-        transition: left 0.05s linear;
-        display: flex;
-        align-items: center;
-        justify-content: center;
         font-size: 1.5rem;
-        color: #fff;
+        max-width: 800px;
+        margin: 20px auto;
+        line-height: 2rem;
     }
-    #resetBtn {
-        margin-top: 30px;
-        padding: 10px 20px;
-        font-size: 1rem;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        background-color: #55aa55;
-        color: white;
+    .word {
+        padding: 3px;
+        border-radius: 3px;
+    }
+    .current {
+        background-color: #3c6e47;
+    }
+    .wrong {
+        background-color: #ff4a4a;
+    }
+    .correct {
+        background-color: #4aff6a;
+        color: black;
+    }
+    #stats {
+        margin-top: 20px;
+        font-size: 1.2rem;
     }
     #endScreen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.9);
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        color: #d9ffd9;
-        font-size: 2rem;
         display: none;
+        margin-top: 30px;
+        background: #164d2f;
+        padding: 20px;
+        border-radius: 10px;
+    }
+    #endScreen h2 {
+        margin: 0;
+        color: #a8ff91;
     }
 </style>
 </head>
 <body>
 
-<h1>Pickle Type</h1>
+<h1>🥒 Pickle Type 🥒</h1>
 <div id="countdown"></div>
 <div id="prompt"></div>
 <div id="stats">
     WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
-<div id="track">
-    <div id="car">🥒</div>
-</div>
-<button id="resetBtn">Reset</button>
-
 <div id="endScreen">
-    <div id="endMessage"></div>
-    <div id="endStats"></div>
-    <button id="endResetBtn">Play Again</button>
+    <h2>Race Finished!</h2>
+    <p>Your WPM: <span id="finalWpm"></span></p>
+    <p>Your Accuracy: <span id="finalAccuracy"></span>%</p>
 </div>
 
 <script>
-const prompts = [
-    "Pickles are crunchy, green, and delicious, and they make sandwiches much more exciting to eat than plain bread.",
-    "A dill pickle can be sweet, sour, or spicy, but they all bring a burst of flavor to burgers and snacks.",
-    "Sometimes people forget that pickles are actually cucumbers that have been soaked in brine or vinegar for a long period.",
-    "Adding pickles to your salad or burger gives a satisfying crunch that enhances every bite and makes meals more fun.",
-    "Pickle Type is a fun typing game where you race your pickle across the track while practicing typing skills with long sentences."
+const sentences = [
+    "Pickles are life especially when typing as fast as you possibly can while imagining cucumbers turning into tasty crunchy green delights.",
+    "Racing through sentences is like racing through a jar of pickles one word at a time crisp and satisfying with every correct keystroke.",
+    "Some people like sweet pickles others like dill but everyone loves a challenge especially when it comes to fast accurate typing games."
 ];
 
-let currentPrompt = "";
-let correctIndex = 0;
-let totalTyped = 0;
-let correctTyped = 0;
+let words = [];
+let currentWordIndex = 0;
 let startTime = null;
-let wpmInterval = null;
+let typedChars = 0;
+let correctChars = 0;
+let countdownValue = 3;
+let raceStarted = false;
 
 const countdownDiv = document.getElementById('countdown');
 const promptDiv = document.getElementById('prompt');
 const wpmSpan = document.getElementById('wpm');
 const accuracySpan = document.getElementById('accuracy');
-const car = document.getElementById('car');
-const track = document.getElementById('track');
-const resetBtn = document.getElementById('resetBtn');
-
 const endScreen = document.getElementById('endScreen');
-const endMessage = document.getElementById('endMessage');
-const endStats = document.getElementById('endStats');
-const endResetBtn = document.getElementById('endResetBtn');
+const finalWpm = document.getElementById('finalWpm');
+const finalAccuracy = document.getElementById('finalAccuracy');
 
-function newPrompt() {
-    const randomIndex = Math.floor(Math.random() * prompts.length);
-    currentPrompt = prompts[randomIndex];
-    correctIndex = 0;
-    totalTyped = 0;
-    correctTyped = 0;
-    startTime = null;
-    renderPrompt();
-    wpmSpan.textContent = 0;
-    accuracySpan.textContent = 100;
-    car.style.left = "0px";
-    countdownDiv.textContent = "";
-    endScreen.style.display = "none";
-
-    if (wpmInterval) clearInterval(wpmInterval);
-
-    startCountdown();
-}
-
-function renderPrompt() {
-    let html = "";
-    for (let i = 0; i < currentPrompt.length; i++) {
-        if (i < correctIndex) html += `<span class="correct">${currentPrompt[i]}</span>`;
-        else html += `<span>${currentPrompt[i]}</span>`;
-    }
-    promptDiv.innerHTML = html;
+function loadPrompt() {
+    const sentence = sentences[Math.floor(Math.random() * sentences.length)];
+    words = sentence.split(" ");
+    promptDiv.innerHTML = words.map((word, i) =>
+        `<span class="word ${i === 0 ? 'current' : ''}">${word}</span>`
+    ).join(" ");
 }
 
 function startCountdown() {
-    let count = 3;
-    countdownDiv.textContent = count;
+    countdownDiv.textContent = countdownValue;
     const interval = setInterval(() => {
-        count--;
-        if (count > 0) countdownDiv.textContent = count;
-        else {
-            countdownDiv.textContent = "Go!";
+        countdownValue--;
+        if (countdownValue > 0) {
+            countdownDiv.textContent = countdownValue;
+        } else {
             clearInterval(interval);
-            setTimeout(() => countdownDiv.textContent = "", 1000);
-            document.addEventListener('keydown', handleTyping);
-            startWPMTimer();
+            countdownDiv.textContent = "GO!";
+            setTimeout(() => countdownDiv.textContent = "", 500);
+            raceStarted = true;
+            startTime = new Date();
         }
     }, 1000);
 }
 
-// continuously update WPM
-function startWPMTimer() {
-    wpmInterval = setInterval(() => {
-        if (!startTime) return;
-        const elapsedMinutes = (new Date() - startTime) / 60000;
-        const wpm = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
-        wpmSpan.textContent = wpm;
-    }, 100);
-}
-
-function handleTyping(e) {
-    if (!startTime) startTime = new Date();
-
-    const char = e.key;
-    if (char.length > 1) return; // ignore Shift, etc.
-
-    totalTyped++;
-
-    if (char === currentPrompt[correctIndex]) {
-        correctTyped++;
-        correctIndex++;
-        renderPrompt();
-        updateCar();
-    }
-
-    // accuracy = correct keystrokes / total keystrokes
-    const accuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
-    accuracySpan.textContent = accuracy;
-
-    if (correctIndex >= currentPrompt.length) {
-        document.removeEventListener('keydown', handleTyping);
-        clearInterval(wpmInterval);
-        showEndScreen();
-    }
-}
-
-function updateCar() {
-    const percent = correctIndex / currentPrompt.length;
-    const trackWidth = track.offsetWidth - car.offsetWidth;
-    car.style.left = (percent * trackWidth) + "px";
-}
-
-function showEndScreen() {
+function updateStats() {
     const elapsedMinutes = (new Date() - startTime) / 60000;
-    const finalWPM = elapsedMinutes > 0 ? Math.round((correctTyped / 5) / elapsedMinutes) : 0;
-    const finalAccuracy = totalTyped === 0 ? 100 : Math.round((correctTyped / totalTyped) * 100);
-
-    endMessage.textContent = "🏁 You Finished the Race! 🏁";
-    endStats.textContent = `WPM: ${finalWPM} | Accuracy: ${finalAccuracy}%`;
-    endScreen.style.display = "flex";
+    const wpm = Math.round((correctChars / 5) / elapsedMinutes);
+    const accuracy = typedChars === 0 ? 100 : Math.round((correctChars / typedChars) * 100);
+    wpmSpan.textContent = wpm;
+    accuracySpan.textContent = accuracy;
 }
 
-resetBtn.addEventListener('click', newPrompt);
-endResetBtn.addEventListener('click', newPrompt);
+document.addEventListener('keydown', (e) => {
+    if (!raceStarted || e.key.length !== 1 && e.key !== " ") return;
 
-// Start first race
-newPrompt();
+    let currentWordElem = document.querySelectorAll('.word')[currentWordIndex];
+    let currentWordText = words[currentWordIndex];
+
+    if (!currentWordElem.dataset.progress) currentWordElem.dataset.progress = "";
+
+    if (e.key === " ") {
+        if (currentWordElem.dataset.progress.trim() === currentWordText) {
+            currentWordElem.classList.remove("current", "wrong");
+            currentWordElem.classList.add("correct");
+        } else {
+            currentWordElem.classList.remove("current");
+            currentWordElem.classList.add("wrong");
+        }
+        currentWordIndex++;
+        if (currentWordIndex >= words.length) {
+            endRace();
+            return;
+        }
+        document.querySelectorAll('.word').forEach(w => w.classList.remove("current"));
+        document.querySelectorAll('.word')[currentWordIndex].classList.add("current");
+    } else {
+        typedChars++;
+        currentWordElem.dataset.progress += e.key;
+        if (currentWordElem.dataset.progress === currentWordText.substring(0, currentWordElem.dataset.progress.length)) {
+            correctChars++;
+            currentWordElem.classList.remove("wrong");
+        } else {
+            currentWordElem.classList.add("wrong");
+        }
+    }
+    updateStats();
+});
+
+function endRace() {
+    raceStarted = false;
+    finalWpm.textContent = wpmSpan.textContent;
+    finalAccuracy.textContent = accuracySpan.textContent;
+    endScreen.style.display = "block";
+}
+
+loadPrompt();
+startCountdown();
 </script>
 
 </body>
