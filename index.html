@@ -3,185 +3,171 @@
 <head>
 <meta charset="UTF-8">
 <title>Pickle Type</title>
-<link rel="icon" type="image/jpeg" href="output (2).jpg">
+<link rel="icon" type="image/jpg" href="output (2).jpg">
 <style>
     body {
         background-color: #1e1e1e;
-        color: #fff;
+        color: #eee;
         font-family: Arial, sans-serif;
         text-align: center;
         padding: 20px;
     }
-    #game {
+    h1 {
+        color: #9acd32;
+        margin-bottom: 10px;
+    }
+    #countdown {
+        font-size: 2em;
+        margin: 20px;
+    }
+    #gameArea {
+        font-size: 24px;
+        margin: 30px auto;
         max-width: 800px;
-        margin: auto;
-        font-size: 28px;
-        line-height: 1.6;
+        line-height: 1.5;
     }
-    .char {
-        padding: 2px 1px;
-    }
-    .current {
-        background-color: #444;
-    }
-    .correct {
-        color: #4caf50;
-    }
-    .wrong {
-        color: #f44336;
-    }
+    .correct { color: #9acd32; }
+    .incorrect { color: #ff4c4c; }
+    .current { background-color: #444; padding: 2px 4px; border-radius: 3px; }
     #stats {
         margin-top: 20px;
-        font-size: 20px;
     }
-    #controls {
-        margin-top: 15px;
+    #resultScreen {
+        display: none;
     }
     button {
-        background: #4caf50;
-        color: white;
-        border: none;
         padding: 10px 20px;
-        margin: 5px;
         font-size: 16px;
-        cursor: pointer;
+        background-color: #9acd32;
+        border: none;
         border-radius: 5px;
+        cursor: pointer;
     }
     button:hover {
-        background: #45a049;
+        background-color: #85b32a;
     }
 </style>
 </head>
 <body>
 
-<h1>🥒 Pickle Type 🥒</h1>
-<div id="game"></div>
-
+<h1>🥒 Pickle Type</h1>
+<div id="countdown">3</div>
+<div id="gameArea"></div>
 <div id="stats">
-    <div>WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%</div>
+    WPM: <span id="wpm">0</span> | Accuracy: <span id="accuracy">100</span>%
 </div>
 
-<div id="controls">
-    <button id="restartBtn">Play Again</button>
-    <button id="musicToggle">Toggle Music</button>
+<div id="resultScreen">
+    <h2>Race Finished!</h2>
+    <p>WPM: <span id="finalWpm"></span></p>
+    <p>Accuracy: <span id="finalAccuracy"></span>%</p>
+    <p>Time: <span id="finalTime"></span> seconds</p>
+    <button onclick="startGame()">Play Again</button>
 </div>
 
 <audio id="wrongSound" src="wrong-126627.mp3"></audio>
-<audio id="bgMusic" src="Pickle man(The greatest of all).mp3" loop></audio>
 
 <script>
-const sentences = [
-    "Pickles are crunchy and fun to type about especially in a dark theme.",
-    "Super pickles can skip words just like a nitro in Nitro Type.",
-    "Typing fast while staying accurate will give you a higher score.",
-    "Some pickles are sweet but others are sour just like life itself."
+let sentences = [
+    "The pickle ran away from the sandwich because it wanted freedom.",
+    "Pickle juice is surprisingly good for preventing muscle cramps after a workout.",
+    "Some people love fried pickles dipped in ranch sauce while others think it's gross.",
+    "A super pickle once saved the world from certain doom using only a jar lid."
 ];
-
-let sentence = "";
-let chars = [];
+let currentText = "";
 let currentIndex = 0;
-let startTime = null;
 let correctChars = 0;
 let totalTyped = 0;
-let mistakes = 0;
-let superPickleUsed = false;
+let wrongSound = document.getElementById("wrongSound");
+let startTime;
+let timerInterval;
+let finished = false;
 
-const gameEl = document.getElementById("game");
-const wpmEl = document.getElementById("wpm");
-const accuracyEl = document.getElementById("accuracy");
-const wrongSound = document.getElementById("wrongSound");
-const bgMusic = document.getElementById("bgMusic");
+function countdownStart() {
+    document.getElementById("gameArea").innerHTML = "";
+    document.getElementById("resultScreen").style.display = "none";
+    document.getElementById("countdown").style.display = "block";
+    let count = 3;
+    document.getElementById("countdown").textContent = count;
+    let interval = setInterval(() => {
+        count--;
+        if (count > 0) {
+            document.getElementById("countdown").textContent = count;
+        } else {
+            clearInterval(interval);
+            document.getElementById("countdown").style.display = "none";
+            startGame();
+        }
+    }, 1000);
+}
 
-function newGame() {
-    sentence = sentences[Math.floor(Math.random() * sentences.length)];
-    gameEl.innerHTML = "";
-    chars = sentence.split("").map((c, i) => {
-        const span = document.createElement("span");
-        span.textContent = c;
-        span.classList.add("char");
-        if (i === 0) span.classList.add("current");
-        gameEl.appendChild(span);
-        return span;
-    });
+function startGame() {
+    currentText = sentences[Math.floor(Math.random() * sentences.length)];
     currentIndex = 0;
     correctChars = 0;
     totalTyped = 0;
-    mistakes = 0;
-    superPickleUsed = false;
-    startTime = null;
+    finished = false;
+    document.getElementById("gameArea").innerHTML = renderText();
+    document.getElementById("stats").style.display = "block";
+    document.getElementById("resultScreen").style.display = "none";
+    startTime = new Date();
+    document.addEventListener("keydown", handleKey);
+    timerInterval = setInterval(updateStats, 100);
+}
+
+function renderText() {
+    return currentText.split("").map((char, i) => {
+        if (i < currentIndex) {
+            return `<span class="${char === currentText[i] ? 'correct' : 'incorrect'}">${char}</span>`;
+        } else if (i === currentIndex) {
+            return `<span class="current">${char}</span>`;
+        } else {
+            return `<span>${char}</span>`;
+        }
+    }).join("");
+}
+
+function handleKey(e) {
+    if (finished) return;
+    let key = e.key;
+    if (key.length === 1) {
+        totalTyped++;
+        if (key === currentText[currentIndex]) {
+            correctChars++;
+            currentIndex++;
+        } else {
+            wrongSound.play();
+        }
+        if (currentIndex >= currentText.length) {
+            endGame();
+        }
+        document.getElementById("gameArea").innerHTML = renderText();
+    }
 }
 
 function updateStats() {
-    const elapsedMinutes = (Date.now() - startTime) / 60000;
-    const wordsTyped = correctChars / 5;
-    const wpm = Math.round(wordsTyped / elapsedMinutes);
-    const accuracy = totalTyped === 0 ? 100 : Math.round((correctChars / totalTyped) * 100);
-    wpmEl.textContent = wpm;
-    accuracyEl.textContent = accuracy;
+    let elapsed = (new Date() - startTime) / 1000 / 60; // in minutes
+    let wpm = ((correctChars / 5) / elapsed).toFixed(2);
+    let accuracy = ((correctChars / totalTyped) * 100).toFixed(1) || 100;
+    document.getElementById("wpm").textContent = wpm;
+    document.getElementById("accuracy").textContent = accuracy;
 }
 
-document.addEventListener("keydown", e => {
-    if (!startTime) startTime = Date.now();
+function endGame() {
+    finished = true;
+    clearInterval(timerInterval);
+    document.removeEventListener("keydown", handleKey);
+    let totalTime = ((new Date() - startTime) / 1000).toFixed(2);
+    document.getElementById("finalWpm").textContent = document.getElementById("wpm").textContent;
+    document.getElementById("finalAccuracy").textContent = document.getElementById("accuracy").textContent;
+    document.getElementById("finalTime").textContent = totalTime;
+    document.getElementById("stats").style.display = "none";
+    document.getElementById("gameArea").innerHTML = "";
+    document.getElementById("resultScreen").style.display = "block";
+}
 
-    if (e.key === "Enter") {
-        if (!superPickleUsed) {
-            while (currentIndex < chars.length && chars[currentIndex].textContent !== " ") {
-                chars[currentIndex].classList.remove("current");
-                chars[currentIndex].classList.add("correct");
-                currentIndex++;
-            }
-            if (currentIndex < chars.length) {
-                chars[currentIndex].classList.remove("current");
-                currentIndex++;
-            }
-            if (currentIndex < chars.length) {
-                chars[currentIndex].classList.add("current");
-            }
-            superPickleUsed = true;
-        }
-        return;
-    }
-
-    if (currentIndex >= chars.length) return;
-
-    totalTyped++;
-    const expectedChar = chars[currentIndex].textContent;
-
-    if (e.key === expectedChar) {
-        chars[currentIndex].classList.remove("current", "wrong");
-        chars[currentIndex].classList.add("correct");
-        correctChars++;
-        currentIndex++;
-        if (currentIndex < chars.length) {
-            chars[currentIndex].classList.add("current");
-        }
-    } else {
-        chars[currentIndex].classList.add("wrong");
-        wrongSound.currentTime = 0;
-        wrongSound.play();
-    }
-
-    if (currentIndex >= chars.length) {
-        updateStats();
-    } else {
-        updateStats();
-    }
-});
-
-document.getElementById("restartBtn").addEventListener("click", () => {
-    newGame();
-});
-
-document.getElementById("musicToggle").addEventListener("click", () => {
-    if (bgMusic.paused) {
-        bgMusic.play();
-    } else {
-        bgMusic.pause();
-    }
-});
-
-newGame();
+countdownStart();
 </script>
-
 </body>
 </html>
+
