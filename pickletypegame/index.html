@@ -1,4 +1,88 @@
 <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Navigation Panel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      position: sticky;
+      top: 0;
+    }
+    .nav-list {
+      display: flex;
+      list-style: none;
+      gap: 20px;
+    }
+    .nav-list li a {
+      text-decoration: none;
+      color: white;
+      font-size: 18px;
+      transition: color 0.3s ease-in-out;
+    }
+    .nav-list li a:hover {
+      color: #ffd700;
+    }
+    .rightNav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #search {
+      padding: 8px;
+      font-size: 16px;
+      border: 2px solid #fff;
+      border-radius: 5px;
+    }
+    .btn {
+      background-color: #ffd700;
+      color: #000;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+    }
+    .btn:hover {
+      background-color: #000;
+      color: #ffd700;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <ul class="nav-list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About Us</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="pickletypegame\index.html">Pickle Type</a></li>
+    </ul>
+    <div class="rightNav">
+      <input type="text" name="search" id="search" placeholder="Search" />
+      <button class="btn">Search</button>
+    </div>
+  </nav>
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
@@ -177,8 +261,4 @@ function endGame() {
 startGame();
 </script>
 </body>
-<footer>
-    For suggetions or support, go just email: coderdude123@proton.me
-</footer>
-<a href="test.html">Go to About Page</a>
 </html>
