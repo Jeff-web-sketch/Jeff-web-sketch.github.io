@@ -7,6 +7,46 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title> <img src="image.jpg" alt="">   Birch website</title>
   <style>
+      .big-button {
+        display: block;
+        width: 300px; /* Adjust as needed */
+        height: 400px; /* Adjust as needed */
+        text-decoration: none;
+        border: 2px solid #000;
+        border-radius: 10px;
+        overflow: hidden;
+        transition: transform 0.3s ease;
+      }
+
+      .big-button:hover {
+        transform: scale(1.05);
+      }
+
+      .button-content {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        padding: 20px;
+        background-color: #f9f9f9;
+      }
+
+      .button-image {
+        width: 100%;
+        height: auto;
+        margin-bottom: 15px;
+        border-radius: 8px;
+      }
+
+      .button-text {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+        text-align: center;
+      }
+  </style>
+  <style>
     * {
       margin: 0;
       padding: 0;
@@ -25,10 +65,24 @@
       position: sticky;
       top: 0;
     }
+    .navbar2 {
+        display: flex;
+        
+        align-items: right;
+        color: white;
+        padding: 10px 20px;
+        position: sticky;
+        top: 0;
+    }
     .nav-list {
       display: flex;
       list-style: none;
       gap: 20px;
+    }
+    .nav-list2 {
+        display: flex;
+        list-style: none;
+        gap: 20px;
     }
     .nav-list li a {
       text-decoration: none;
@@ -97,4 +151,21 @@
       }
     </style>
 </picture>
+
+<ul class="navbar2">
+    <a href="pickletype" class="big-button">
+      <div class="button-content">
+        <img src="image.jpg" alt="Button Image" class="button-image">
+        <p class="button-text">Download pickletype for macos</p>
+      </div>
+    </a>
+
+
+    <a href="pickletype.html" class="big-button">
+        <div class="button-content">
+            <img src="output (2).jpg" alt="Button Image" class="button-image">
+                <p class="button-text">Play pickletype!</p>
+        </div>
+    </a>
+</nav>
 </html>
