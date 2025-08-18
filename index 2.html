@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Navigation Panel</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: 'Arial', sans-serif;
+    }
+    .navbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background-color: #333;
+      color: white;
+      padding: 10px 20px;
+      position: sticky;
+      top: 0;
+    }
+    .nav-list {
+      display: flex;
+      list-style: none;
+      gap: 20px;
+    }
+    .nav-list li a {
+      text-decoration: none;
+      color: white;
+      font-size: 18px;
+      transition: color 0.3s ease-in-out;
+    }
+    .nav-list li a:hover {
+      color: #ffd700;
+    }
+    .rightNav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    #search {
+      padding: 8px;
+      font-size: 16px;
+      border: 2px solid #fff;
+      border-radius: 5px;
+    }
+    .btn {
+      background-color: #ffd700;
+      color: #000;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s ease-in-out;
+    }
+    .btn:hover {
+      background-color: #000;
+      color: #ffd700;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <ul class="nav-list">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="about.html">About Us</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="contact.html">Contact</a></li>
+      <li><a href="pickletypegame\index.html">Pickle Type</a></li>
+    </ul>
+    <div class="rightNav">
+      <input type="text" name="search" id="search" placeholder="Search" />
+      <button class="btn">Search</button>
+    </div>
+  </nav>
+</body>
+</html>
+
+
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Pickle Type</title>
+<link rel="icon" type="image/jpeg" href="output (2).jpg">
+<style>
+    body {
+        font-family: 'Arial', sans-serif;
+        background: linear-gradient(#1b1b1b, #2e2e2e);
+        color: #f0f0f0;
+        text-align: center;
+        margin: 0;
+        padding: 0;
+    }
+    h1 {
+        margin-top: 20px;
+        font-size: 45px;
+        color: #9acd32;
+        text-shadow: 2px 2px #274e13;
+    }
+    #stats {
+        margin-top: 10px;
+        font-size: 20px;
+        color: #d0f0a0;
+    }
+    #sentence {
+        font-size: 28px;
+        margin: 40px auto;
+        max-width: 80%;
+        line-height: 1.6;
+        background-color: #274e13;
+        padding: 20px;
+        border-radius: 20px;
+        box-shadow: 0 0 20px #4caf50;
+    }
+    .correct { color: #c8ff7c; }
+    .incorrect { color: #ff6f6f; }
+    .current { background-color: #4caf50; color: black; border-radius: 5px; padding: 2px 4px; }
+    #finishScreen {
+        display: none;
+        margin-top: 50px;
+        background-color: #274e13;
+        padding: 20px;
+        border-radius: 20px;
+        display: inline-block;
+        box-shadow: 0 0 20px #4caf50;
+    }
+    button {
+        background-color: #9acd32;
+        color: black;
+        border: none;
+        padding: 12px 25px;
+        font-size: 18px;
+        cursor: pointer;
+        border-radius: 12px;
+        margin-top: 15px;
+        box-shadow: 0 0 10px #4caf50;
+        transition: 0.2s;
+    }
+    button:hover {
+        background-color: #7ca321;
+        box-shadow: 0 0 20px #aaff70;
+    }
+</style>
+</head>
+<body>
+
+<h1>🥒 Pickle Type 🥒</h1>
+<div id="stats">WPM: 0 | Accuracy: 100% | Super Pickle: 1</div>
+<div id="sentence"></div>
+
+<div id="finishScreen">
+    <h2>🏁 Finished!</h2>
+    <p id="finalStats"></p>
+    <button onclick="startGame()">Play Again</button>
+</div>
+
+<audio id="wrongSound" src="erro-126627.mp3"></audio>
+
+<script>
+const sentences = [
+    "Pickles are the crunchy treasures of every sandwich, bringing joy and tangy delight with every bite.",
+    "When the great pickle race began, no one expected the briny champion to win in record time.",
+    "Typing like a pickle master requires speed, focus, and the determination of a cucumber dreaming of greatness.",
+    "In the vast land of jars, only one pickle would be crowned the king of crunch.",
+    "Legends say that whoever finishes the pickle race in record time will be granted eternal brine.",
+    "Every pickle has a story, from the humble cucumber to the legendary super pickle of typing fame.",
+    "Crunching through sentences at lightning speed is the mark of a true Pickle Type champion."
+];
+
+let currentSentence = "";
+let currentIndex = 0;
+let startTime, errors = 0, totalChars = 0;
+let superPickle = 1;
+
+const sentenceDiv = document.getElementById("sentence");
+const statsDiv = document.getElementById("stats");
+const wrongSound = document.getElementById("wrongSound");
+const finishScreen = document.getElementById("finishScreen");
+const finalStats = document.getElementById("finalStats");
+
+function startGame() {
+    finishScreen.style.display = "none";
+    currentSentence = sentences[Math.floor(Math.random() * sentences.length)];
+    currentIndex = 0;
+    errors = 0;
+    totalChars = 0;
+    superPickle = 1;
+    startTime = null;
+    renderSentence();
+    updateStats();
+}
+
+function renderSentence() {
+    let html = "";
+    for (let i = 0; i < currentSentence.length; i++) {
+        let char = currentSentence[i];
+        if (i === currentIndex) {
+            html += `<span class="current">${char}</span>`;
+        } else if (i < currentIndex) {
+            html += `<span class="${char === currentSentence[i] ? 'correct' : 'incorrect'}">${char}</span>`;
+        } else {
+            html += char;
+        }
+    }
+    sentenceDiv.innerHTML = html;
+}
+
+function updateStats() {
+    let elapsed = startTime ? (Date.now() - startTime) / 1000 / 60 : 0;
+    let wpm = elapsed > 0 ? Math.round((currentIndex / 5) / elapsed) : 0;
+    let accuracy = totalChars > 0 ? Math.round(((totalChars - errors) / totalChars) * 100) : 100;
+    statsDiv.innerHTML = `WPM: ${wpm} | Accuracy: ${accuracy}% | Super Pickle: ${superPickle}`;
+}
+
+    document.addEventListener("keydown", (e) => {
+        e.preventDefault(); // stops the macOS error sound
+        if (!startTime) startTime = Date.now();
+
+        if (e.key === "Enter" && superPickle > 0) {
+            let spaceIndex = currentSentence.indexOf(" ", currentIndex);
+            if (spaceIndex === -1) currentIndex = currentSentence.length;
+            else currentIndex = spaceIndex + 1;
+            superPickle--;
+            renderSentence();
+            updateStats();
+            return;
+        }
+
+        if (e.key.length === 1) {
+            totalChars++;
+            if (e.key === currentSentence[currentIndex]) {
+                currentIndex++;
+                if (currentIndex >= currentSentence.length) {
+                    endGame();
+                    return;
+                }
+            } else {
+                errors++;
+                wrongSound.currentTime = 0;
+                wrongSound.play();
+            }
+            renderSentence();
+            updateStats();
+        }
+    });
+
+function endGame() {
+    let elapsed = (Date.now() - startTime) / 1000 / 60;
+    let wpm = Math.round((currentIndex / 5) / elapsed);
+    let accuracy = totalChars > 0 ? Math.round(((totalChars - errors) / totalChars) * 100) : 100;
+    finalStats.innerHTML = `Final WPM: ${wpm} | Final Accuracy: ${accuracy}% | Errors: ${errors}`;
+    finishScreen.style.display = "block";
+}
+
+startGame();
+</script>
+</body>
+</html>
